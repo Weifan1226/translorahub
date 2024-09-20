@@ -54,7 +54,7 @@ require_version("datasets>=1.8.0", "To fix: pip install -r examples/pytorch/ques
 
 logger = logging.getLogger(__name__)
 
-bleu_eval = evaluate.load("bleu")
+#bleu_eval = evaluate.load("bleu")
 # rouge_eval = evaluate.load("rouge")
 
 @dataclass
@@ -554,9 +554,14 @@ def main():
         # Some simple post-processing
         decoded_preds, decoded_labels = postprocess_text(decoded_preds, decoded_labels)
         result = get_exact_match(predictions=decoded_preds, references=decoded_labels)
-        bleu_result = bleu_eval.compute(predictions=decoded_preds, references=decoded_labels)
-        return {"exact_match": result, "bleu": bleu_result["bleu"]}
-
+        
+        
+        # bleu_result = bleu_eval.compute(predictions=decoded_preds, references=decoded_labels)
+        #return {"exact_match": result, "bleu": bleu_result["bleu"]}
+        return {"exact_match": result}
+    
+    
+    
     # Post-processing:
     def postprocess_text(preds, labels):
         preds = [pred.strip() for pred in preds]
