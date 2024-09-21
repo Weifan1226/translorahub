@@ -1,5 +1,7 @@
 from lorahub.algorithm import my_lorahub_inference
 import os
+import torch
+from transformers import AutoModelForCausalLM
 import json
 from lorahub.algorithm import lorahub_learning
 from lorahub.constant import LORA_MODULE_NAMES
@@ -16,7 +18,7 @@ from random import shuffle
 #     pass
 
 
-def evaluate_lorahub_results_few_shot(folder, flan_model_name, num_loras):
+def evaluate_lorahub_results_few_shot(folder, flan_model_name, num_loras, allowed_keys):
     sub_dirs = os.listdir(folder)
     i = 0
     
@@ -68,35 +70,66 @@ def evaluate_lorahub_results_few_shot(folder, flan_model_name, num_loras):
                                                             model_name_or_path=flan_model_name,
                                                             max_inference_step=25,
                                                             batch_size=5,
-                                                            num_loras=num_loras)
+                                                            num_loras=num_loras,
+                                                            allowed_keys=allowed_keys,
+                                                            )   
+        
+        # for module, weight in zip(modules, module_weights.value):
+        #     print(f"{module}: {weight}")
+        
+        # base_model = AutoModelForCausalLM.from_pretrained("/root/autodl-tmp/model/Llama-2-7B-chat-fp16",device_map="auto")
+        # def compare_models(model, base_model):
+        #     # 初始化一个空的列表，存储参数不一致的层名
+        #     different_layers = []
 
-        for module, weight in zip(modules, module_weights.value):
-            print(f"{module}: {weight}")
+        #     # 获取模型参数
+        #     model_params = model.named_parameters()
+        #     base_model_params = base_model.named_parameters()
+
+        #     # 转换为字典以便于逐层比较
+        #     model_dict = dict(model_params)
+        #     base_model_dict = dict(base_model_params)
+
+        #     # 比较两者的参数
+        #     for name, param in model_dict.items():
+        #         if name in base_model_dict:
+        #             # 如果两个模型的参数不相同，就将层的名称添加到列表中
+        #             if not torch.equal(param, base_model_dict[name]):
+        #                 different_layers.append(name)
+        #         else:
+        #             different_layers.append(name)  # 如果 base_model 中没有此层
+
+        #     return different_layers
+
+        # different_layers = compare_models(model, base_model)
+        # print("不同的层:")
+        # for layer in different_layers:
+        #     print(layer)
 
 
-        # _, _, ASR = my_lorahub_inference(example_inputs=task_inputs,
-        #                                     model_or_name_path=model,
-        #                                     tokenizer_or_tokenizer_path=tokenizer,
-        #                                     batch_size=10,
-        #                                     # Can set as None if you do not have the ground truth
-        #                                     EC=False,
-        #                                     ASR=True,
-        #                                     example_outputs=task_outputs)
+        _, _, ASR = my_lorahub_inference(example_inputs=task_inputs,
+                                            model_or_name_path=model,
+                                            tokenizer_or_tokenizer_path=tokenizer,
+                                            batch_size=10,
+                                            # Can set as None if you do not have the ground truth
+                                            EC=False,
+                                            ASR=True,
+                                            example_outputs=task_outputs)
         
         # Perform inference to get predictions
-        _, task_acc, _ = my_lorahub_inference(example_inputs=task_inputs,
-                                        model_or_name_path=model,
-                                        tokenizer_or_tokenizer_path=tokenizer,
-                                        batch_size=10,
-                                        # Can set as None if you do not have the ground truth
-                                        EC=True,
-                                        ASR=False,
-                                        example_outputs=task_outputs)
+        # _, task_acc, _ = my_lorahub_inference(example_inputs=task_inputs,
+        #                                 model_or_name_path=model,
+        #                                 tokenizer_or_tokenizer_path=tokenizer,
+        #                                 batch_size=10,
+        #                                 # Can set as None if you do not have the ground truth
+        #                                 EC=True,
+        #                                 ASR=False,
+        #                                 example_outputs=task_outputs)
         
-        task_perf_list.append(task_acc)
+        # task_perf_list.append(task_acc)
             
-        avg_perf, max_perf = sum(task_perf_list) / len(task_perf_list), max(task_perf_list)
-        print("average perf:", avg_perf, "best perf:", max_perf)
+        # avg_perf, max_perf = sum(task_perf_list) / len(task_perf_list), max(task_perf_list)
+        # print("average perf:", avg_perf, "best perf:", max_perf)
 
 if __name__ == "__main__":
     if not os.path.exists("data_bbh"):
@@ -104,4 +137,8 @@ if __name__ == "__main__":
         os.system("wget https://github.com/sail-sg/lorahub/releases/download/0.1/data_bbh.zip")
         # unzip
         os.system("unzip data_bbh.zip")
-    evaluate_lorahub_results_few_shot("data_bbh", "/root/autodl-tmp/LLMs-Finetuning-Safety/llama2/ckpt/Llama-2-7b-chat-fp16", num_loras=2)
+    #allowed_keys = ["q_proj", "k_proj", "v_proj", "mlp"]
+    allowed_keys = ["mlp"]
+    
+    print(f'Adding Lora keys: {allowed_keys}')
+    evaluate_lorahub_results_few_shot("data_bbh", "/root/autodl-tmp/model/Llama-2-7B-chat-fp16", num_loras=5, allowed_keys=allowed_keys)
