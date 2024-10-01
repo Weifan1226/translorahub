@@ -68,7 +68,7 @@ def evaluate_lorahub_results_few_shot(folder, flan_model_name, num_loras, allowe
                                                             example_outputs=examples_outputs,
                                                             example_instructions=example_instructions,
                                                             model_name_or_path=flan_model_name,
-                                                            max_inference_step=25,
+                                                            max_inference_step=2,
                                                             batch_size=5,
                                                             num_loras=num_loras,
                                                             allowed_keys=allowed_keys,
@@ -117,19 +117,20 @@ def evaluate_lorahub_results_few_shot(folder, flan_model_name, num_loras, allowe
                                             example_outputs=task_outputs)
         
         # Perform inference to get predictions
-        # _, task_acc, _ = my_lorahub_inference(example_inputs=task_inputs,
-        #                                 model_or_name_path=model,
-        #                                 tokenizer_or_tokenizer_path=tokenizer,
-        #                                 batch_size=10,
-        #                                 # Can set as None if you do not have the ground truth
-        #                                 EC=True,
-        #                                 ASR=False,
-        #                                 example_outputs=task_outputs)
+        _, task_acc, _ = my_lorahub_inference(example_inputs=task_inputs,
+                                        model_or_name_path=model,
+                                        tokenizer_or_tokenizer_path=tokenizer,
+                                        batch_size=10,
+                                        # Can set as None if you do not have the ground truth
+                                        EC=True,
+                                        ASR=False,
+                                        example_outputs=task_outputs,
+                                        example_instructions=task_instructions)
         
-        # task_perf_list.append(task_acc)
+        task_perf_list.append(task_acc)
             
-        # avg_perf, max_perf = sum(task_perf_list) / len(task_perf_list), max(task_perf_list)
-        # print("average perf:", avg_perf, "best perf:", max_perf)
+        avg_perf, max_perf = sum(task_perf_list) / len(task_perf_list), max(task_perf_list)
+        print("average perf:", avg_perf, "best perf:", max_perf)
 
 if __name__ == "__main__":
     if not os.path.exists("data_bbh"):
@@ -138,7 +139,7 @@ if __name__ == "__main__":
         # unzip
         os.system("unzip data_bbh.zip")
     #allowed_keys = ["q_proj", "k_proj", "v_proj", "mlp"]
-    allowed_keys = ["mlp"]
+    allowed_keys = ["q_proj", "k_proj", "v_proj", "mlp"]
     
     print(f'Adding Lora keys: {allowed_keys}')
     evaluate_lorahub_results_few_shot("data_bbh", "/root/autodl-tmp/model/Llama-2-7B-chat-fp16", num_loras=5, allowed_keys=allowed_keys)
